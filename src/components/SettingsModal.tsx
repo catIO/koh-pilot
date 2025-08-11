@@ -33,7 +33,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, circleCo
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-3">
-                Number of Circles
+                Number of Repetitions
               </label>
               <div className="grid grid-cols-5 gap-2">
                 {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (

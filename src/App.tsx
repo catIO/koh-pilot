@@ -221,7 +221,7 @@ function App() {
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-white">
-              Koh-Pilot
+              Practice Koh-Pilot
             </h1>
             <button
               onClick={() => setIsSettingsOpen(true)}
