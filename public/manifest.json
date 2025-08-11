@@ -1,0 +1,21 @@
+{
+  "name": "Iteration Tracker",
+  "short_name": "Tracker",
+  "description": "Track your successful iterations with visual progress",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1b3a",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'%3E%3Cpath d='M9 16.17L5.53 12.7a.996.996 0 1 0-1.41 1.41L9 19l10.5-10.5a.996.996 0 1 0-1.41-1.41L9 16.17z'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'%3E%3Cpath d='M9 16.17L5.53 12.7a.996.996 0 1 0-1.41 1.41L9 19l10.5-10.5a.996.996 0 1 0-1.41-1.41L9 16.17z'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
