@@ -6,8 +6,8 @@ interface CircleGridProps {
 }
 
 const CircleGrid: React.FC<CircleGridProps> = ({ totalCircles, completedCircles }) => {
-  const radius = 60;
-  const strokeWidth = 8;
+  const radius = 170;
+  const strokeWidth = 20;
   const normalizedRadius = radius - strokeWidth * 2;
   const circumference = normalizedRadius * 2 * Math.PI;
   const strokeDashoffset = circumference - (completedCircles / totalCircles) * circumference;
@@ -43,15 +43,6 @@ const CircleGrid: React.FC<CircleGridProps> = ({ totalCircles, completedCircles 
             className="transition-all duration-500 ease-out"
           />
         </svg>
-        {/* Center content */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-white">
-              {completedCircles}/{totalCircles}
-            </div>
-            <div className="text-sm text-gray-300">Progress</div>
-          </div>
-        </div>
       </div>
     </div>
   );
