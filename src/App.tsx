@@ -55,79 +55,47 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 25% 25%, #6366f1 0%, transparent 50%),
-                           radial-gradient(circle at 75% 75%, #8b5cf6 0%, transparent 50%)`
-        }} />
-      </div>
-
-      {/* Header */}
-      <header className="relative z-10 p-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-white mb-1">Iteration Tracker</h1>
-          <p className="text-gray-400 text-sm">Track your successful iterations</p>
+    <div className="min-h-screen p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-white">
+            Koh-Pilot
+          </h1>
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="p-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-lg transition-all duration-200 shadow-sm border border-white/20"
+          >
+            <Settings className="w-5 h-5 text-white" />
+          </button>
         </div>
-        
-        <button
-          onClick={() => setIsSettingsOpen(true)}
-          className="p-3 bg-slate-800/50 backdrop-blur-lg hover:bg-slate-700/50 rounded-full transition-all duration-200 shadow-lg border border-slate-700/50"
-        >
-          <Settings className="w-6 h-6 text-gray-300" />
-        </button>
-      </header>
 
-      {/* Main Content */}
-      <main className="relative z-10 px-6 py-12">
+        {/* Main Content */}
         <div className="max-w-2xl mx-auto">
-          {/* Progress Display */}
-          <div className="text-center mb-12">
-            <div className="inline-block bg-slate-800/30 backdrop-blur-lg rounded-2xl px-6 py-4 border border-slate-700/50">
-              <div className="text-4xl font-bold text-white mb-2">
-                {completedCircles} / {circleCount}
-              </div>
-              <div className="text-gray-400 text-sm">Iterations Completed</div>
-            </div>
-          </div>
-
           {/* Circle Grid */}
-          <div className="mb-16">
+          <div className="mb-8">
             <CircleGrid totalCircles={circleCount} completedCircles={completedCircles} />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-center space-x-8">
+          <div className="flex justify-center space-x-6">
             <button
               onClick={handleCheck}
               disabled={completedCircles >= circleCount}
-              className="group relative p-4 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-full transition-all duration-200 shadow-2xl shadow-emerald-500/25 disabled:shadow-none"
+              className="group relative p-4 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-all duration-200 shadow-sm"
             >
-              <Check className="w-8 h-8 text-white" />
-              <div className="absolute inset-0 rounded-full bg-white/20 scale-0 group-hover:scale-100 group-active:scale-95 transition-transform duration-200" />
+              <Check className="w-6 h-6 text-white" />
             </button>
             
             <button
               onClick={handleReset}
-              className="group relative p-4 bg-red-500 hover:bg-red-600 rounded-full transition-all duration-200 shadow-2xl shadow-red-500/25"
+              className="group relative p-4 bg-red-500 hover:bg-red-600 rounded-lg transition-all duration-200 shadow-sm"
             >
-              <X className="w-8 h-8 text-white" />
-              <div className="absolute inset-0 rounded-full bg-white/20 scale-0 group-hover:scale-100 group-active:scale-95 transition-transform duration-200" />
+              <X className="w-6 h-6 text-white" />
             </button>
           </div>
-
-          {/* Button Labels */}
-          <div className="flex justify-center space-x-8 mt-4">
-            <div className="text-center">
-              <div className="text-gray-300 text-sm font-medium">Complete</div>
-            </div>
-            <div className="text-center">
-              <div className="text-gray-300 text-sm font-medium">Reset</div>
-            </div>
-          </div>
         </div>
-      </main>
+      </div>
 
       {/* Modals and Overlays */}
       <SettingsModal

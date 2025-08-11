@@ -6,35 +6,53 @@ interface CircleGridProps {
 }
 
 const CircleGrid: React.FC<CircleGridProps> = ({ totalCircles, completedCircles }) => {
-  const getGridCols = (count: number) => {
-    if (count <= 3) return 'grid-cols-3';
-    if (count <= 6) return 'grid-cols-3';
-    if (count <= 9) return 'grid-cols-3';
-    return 'grid-cols-4';
-  };
+  const radius = 60;
+  const strokeWidth = 8;
+  const normalizedRadius = radius - strokeWidth * 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (completedCircles / totalCircles) * circumference;
 
   return (
-    <div className={`grid ${getGridCols(totalCircles)} gap-6 max-w-md mx-auto`}>
-      {Array.from({ length: totalCircles }).map((_, index) => (
-        <div
-          key={index}
-          className={`
-            w-16 h-16 rounded-full border-4 transition-all duration-300 ease-out transform
-            ${index < completedCircles 
-              ? 'bg-emerald-400 border-emerald-300 shadow-lg shadow-emerald-400/50 scale-110' 
-              : 'bg-gray-600 border-gray-500 shadow-md'
-            }
-          `}
+    <div className="flex justify-center">
+      <div className="relative">
+        {/* Background circle */}
+        <svg
+          width={radius * 2}
+          height={radius * 2}
+          className="transform -rotate-90"
         >
-          {index < completedCircles && (
-            <div className="w-full h-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-white animate-bounce" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
+          <circle
+            stroke="rgba(255, 255, 255, 0.2)"
+            fill="transparent"
+            strokeWidth={strokeWidth}
+            r={normalizedRadius}
+            cx={radius}
+            cy={radius}
+          />
+          {/* Progress circle */}
+          <circle
+            stroke="#10b981"
+            fill="transparent"
+            strokeWidth={strokeWidth}
+            strokeDasharray={circumference + ' ' + circumference}
+            style={{ strokeDashoffset }}
+            strokeLinecap="round"
+            r={normalizedRadius}
+            cx={radius}
+            cy={radius}
+            className="transition-all duration-500 ease-out"
+          />
+        </svg>
+        {/* Center content */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-white">
+              {completedCircles}/{totalCircles}
             </div>
-          )}
+            <div className="text-sm text-gray-300">Progress</div>
+          </div>
         </div>
-      ))}
+      </div>
     </div>
   );
 };
