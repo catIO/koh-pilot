@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Check, X, Settings } from 'lucide-react';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import SettingsIcon from '@mui/icons-material/Settings';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PauseIcon from '@mui/icons-material/Pause';
 import CircleGrid from './components/CircleGrid';
 import SettingsModal from './components/SettingsModal';
+import { useMetronome } from './hooks/useMetronome';
 
 // Fireworks-style confetti function
 const createConfetti = () => {
@@ -163,6 +168,9 @@ function App() {
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  // Metronome hook
+  const { settings: metronomeSettings, toggleMetronome } = useMetronome();
+
   // Ensure component is properly initialized
   useEffect(() => {
     setIsInitialized(true);
@@ -223,12 +231,25 @@ function App() {
             <h1 className="text-3xl font-bold text-white">
               Practice Koh-Pilot
             </h1>
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="p-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-lg transition-all duration-200 shadow-sm border border-white/20"
-            >
-              <Settings className="w-5 h-5 text-white" />
-            </button>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={toggleMetronome}
+                className="p-3 bg-emerald-500/20 backdrop-blur-sm hover:bg-emerald-500/30 rounded-lg transition-all duration-200 shadow-sm border border-emerald-500/30"
+                title={`${metronomeSettings.isPlaying ? 'Pause' : 'Play'} Metronome`}
+              >
+                {metronomeSettings.isPlaying ? (
+                  <PauseIcon className="w-5 h-5 text-emerald-400" />
+                ) : (
+                  <PlayArrowIcon className="w-5 h-5 text-emerald-400" />
+                )}
+              </button>
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="p-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-lg transition-all duration-200 shadow-sm border border-white/20"
+              >
+                <SettingsIcon className="w-5 h-5 text-white" />
+              </button>
+            </div>
           </div>
 
           {/* Main Content */}
@@ -245,14 +266,14 @@ function App() {
                 disabled={completedCircles >= circleCount}
                 className="group relative p-4 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-all duration-200 shadow-sm"
               >
-                <Check className="w-6 h-6 text-white" />
+                <CheckIcon className="w-6 h-6 text-white" />
               </button>
               
               <button
                 onClick={handleReset}
                 className="group relative p-4 bg-red-500 hover:bg-red-600 rounded-lg transition-all duration-200 shadow-sm"
               >
-                <X className="w-6 h-6 text-white" />
+                <CloseIcon className="w-6 h-6 text-white" />
               </button>
             </div>
           </div>

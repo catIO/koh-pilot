@@ -1,5 +1,9 @@
 import React from 'react';
-import { Settings, X } from 'lucide-react';
+import SettingsIcon from '@mui/icons-material/Settings';
+import CloseIcon from '@mui/icons-material/Close';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import { useMetronome } from '../hooks/useMetronome';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -9,16 +13,38 @@ interface SettingsModalProps {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, circleCount, onCircleCountChange }) => {
+  const {
+    settings: metronomeSettings,
+    setBpm,
+    setClickTone,
+    setVolume,
+    toggleMetronome
+  } = useMetronome();
+
+  const [bpmInput, setBpmInput] = React.useState(metronomeSettings.bpm.toString());
+
+  // Update input when metronome settings change
+  React.useEffect(() => {
+    setBpmInput(metronomeSettings.bpm.toString());
+  }, [metronomeSettings.bpm]);
+
   if (!isOpen) return null;
+
+  const clickTones = [
+    { value: 'beep', label: 'Beep' },
+    { value: 'click', label: 'Click' },
+    { value: 'tick', label: 'Tick' },
+    { value: 'woodblock', label: 'Woodblock' }
+  ] as const;
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center p-4">
-      <div className="bg-slate-800/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700/50 w-full max-w-md">
+      <div className="bg-slate-800/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700/50 w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-indigo-500/20 rounded-lg">
-                <Settings className="w-5 h-5 text-indigo-400" />
+                <SettingsIcon className="w-5 h-5 text-indigo-400" />
               </div>
               <h2 className="text-xl font-semibold text-white">Settings</h2>
             </div>
@@ -26,11 +52,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, circleCo
               onClick={onClose}
               className="p-2 hover:bg-slate-700/50 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-gray-400" />
+              <CloseIcon className="w-5 h-5 text-gray-400" />
             </button>
           </div>
           
           <div className="space-y-6">
+            {/* Repetitions Section */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-3">
                 Number of Repetitions
@@ -53,6 +80,106 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, circleCo
                 ))}
               </div>
             </div>
+
+            {/* Metronome Section */}
+            <div className="pt-4 border-t border-slate-700/50">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="p-2 bg-emerald-500/20 rounded-lg">
+                  <MusicNoteIcon className="w-4 h-4 text-emerald-400" />
+                </div>
+                <h3 className="text-lg font-medium text-white">Metronome</h3>
+              </div>
+
+              {/* BPM Control */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  BPM
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="range"
+                    min="20"
+                    max="250"
+                    value={metronomeSettings.bpm}
+                    onChange={(e) => setBpm(parseInt(e.target.value))}
+                    className="flex-1 h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer slider"
+                  />
+                  <input
+                    type="number"
+                    min="20"
+                    max="250"
+                    value={bpmInput}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setBpmInput(value);
+                      
+                      const numValue = parseInt(value);
+                      if (!isNaN(numValue) && numValue >= 20 && numValue <= 250) {
+                        setBpm(numValue);
+                      }
+                    }}
+                    onBlur={() => {
+                      // Validate and set final value when input loses focus
+                      const numValue = parseInt(bpmInput);
+                      if (isNaN(numValue) || numValue < 20) {
+                        setBpmInput('20');
+                        setBpm(20);
+                      } else if (numValue > 250) {
+                        setBpmInput('250');
+                        setBpm(250);
+                      } else {
+                        setBpmInput(numValue.toString());
+                        setBpm(numValue);
+                      }
+                    }}
+                    className="w-16 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-center text-sm focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              {/* Click Tone Selection */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-3">
+                  Click Tone
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {clickTones.map((tone) => (
+                    <button
+                      key={tone.value}
+                      onClick={() => setClickTone(tone.value)}
+                      className={`
+                        p-3 rounded-lg font-medium transition-all duration-200 text-sm
+                        ${metronomeSettings.clickTone === tone.value 
+                          ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25' 
+                          : 'bg-slate-700/50 text-gray-300 hover:bg-slate-600/50'
+                        }
+                      `}
+                    >
+                      {tone.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Volume Control */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Volume: {Math.round(metronomeSettings.volume * 100)}%
+                </label>
+                <div className="flex items-center space-x-3">
+                  <VolumeUpIcon className="w-4 h-4 text-gray-400" />
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={metronomeSettings.volume}
+                    onChange={(e) => setVolume(parseFloat(e.target.value))}
+                    className="flex-1 h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer slider"
+                  />
+                </div>
+              </div>
+            </div>
             
             <div className="pt-4 border-t border-slate-700/50">
               <button
@@ -65,6 +192,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, circleCo
           </div>
         </div>
       </div>
+
+
     </div>
   );
 };
