@@ -169,7 +169,15 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Metronome hook
-  const { settings: metronomeSettings, toggleMetronome } = useMetronome();
+  const { 
+    settings: metronomeSettings, 
+    toggleMetronome,
+    setBpm,
+    setClickTone,
+    setVolume,
+    startMetronome,
+    stopMetronome
+  } = useMetronome();
 
   // Ensure component is properly initialized
   useEffect(() => {
@@ -285,6 +293,13 @@ function App() {
           onClose={() => setIsSettingsOpen(false)}
           circleCount={circleCount}
           onCircleCountChange={handleCircleCountChange}
+          metronomeSettings={metronomeSettings}
+          toggleMetronome={toggleMetronome}
+          setBpm={setBpm}
+          setClickTone={setClickTone}
+          setVolume={setVolume}
+          startMetronome={startMetronome}
+          stopMetronome={stopMetronome}
         />
 
         {/* Confetti will be handled differently to prevent hook errors */}

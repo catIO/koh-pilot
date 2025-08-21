@@ -3,23 +3,37 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CloseIcon from '@mui/icons-material/Close';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import { useMetronome } from '../hooks/useMetronome';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PauseIcon from '@mui/icons-material/Pause';
+import { MetronomeSettings } from '../hooks/useMetronome';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   circleCount: number;
   onCircleCountChange: (count: number) => void;
+  metronomeSettings: MetronomeSettings;
+  toggleMetronome: () => void;
+  setBpm: (bpm: number) => void;
+  setClickTone: (tone: MetronomeSettings['clickTone']) => void;
+  setVolume: (volume: number) => void;
+  startMetronome: () => void;
+  stopMetronome: () => void;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, circleCount, onCircleCountChange }) => {
-  const {
-    settings: metronomeSettings,
-    setBpm,
-    setClickTone,
-    setVolume,
-    toggleMetronome
-  } = useMetronome();
+const SettingsModal: React.FC<SettingsModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  circleCount, 
+  onCircleCountChange,
+  metronomeSettings,
+  toggleMetronome,
+  setBpm,
+  setClickTone,
+  setVolume,
+  startMetronome,
+  stopMetronome
+}) => {
 
   const [bpmInput, setBpmInput] = React.useState(metronomeSettings.bpm.toString());
 
@@ -83,11 +97,27 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, circleCo
 
             {/* Metronome Section */}
             <div className="pt-4 border-t border-slate-700/50">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="p-2 bg-emerald-500/20 rounded-lg">
-                  <MusicNoteIcon className="w-4 h-4 text-emerald-400" />
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-emerald-500/20 rounded-lg">
+                    <MusicNoteIcon className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-white">Metronome</h3>
                 </div>
-                <h3 className="text-lg font-medium text-white">Metronome</h3>
+                <button
+                  onClick={toggleMetronome}
+                  className={`p-3 rounded-lg transition-all duration-200 ${
+                    metronomeSettings.isPlaying
+                      ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/25'
+                      : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25'
+                  }`}
+                >
+                  {metronomeSettings.isPlaying ? (
+                    <PauseIcon className="w-5 h-5" />
+                  ) : (
+                    <PlayArrowIcon className="w-5 h-5" />
+                  )}
+                </button>
               </div>
 
               {/* BPM Control */}

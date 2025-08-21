@@ -3,6 +3,17 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
+// Register service worker with cleanup
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then((registration) => {
+      console.log('SW registered: ', registration);
+    })
+    .catch((registrationError) => {
+      console.log('SW registration failed: ', registrationError);
+    });
+}
+
 // Force re-render on HMR updates to prevent hook issues
 const root = createRoot(document.getElementById('root')!);
 

@@ -27,6 +27,8 @@ export const useMetronome = () => {
     localStorage.setItem('metronome_settings', JSON.stringify(settings));
   }, [settings]);
 
+
+
   // Initialize audio context
   const initAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
@@ -57,41 +59,55 @@ export const useMetronome = () => {
 
   // Play click based on selected tone
   const playClick = useCallback(() => {
-    const { clickTone, volume } = settings;
+    // Read current settings dynamically
+    const currentSettings = JSON.parse(localStorage.getItem('metronome_settings') || '{}');
+    const { clickTone = 'click', volume = 0.7 } = currentSettings;
     
     switch (clickTone) {
       case 'beep':
         generateClick(800, 0.1, volume);
         break;
       case 'click':
-        generateClick(1000, 0.05, volume);
+        generateClick(500, 0.05, volume);
         break;
       case 'tick':
         generateClick(1200, 0.03, volume);
         break;
       case 'woodblock':
-        // Woodblock sound - multiple frequencies
-        generateClick(200, 0.1, volume * 0.7);
-        setTimeout(() => generateClick(400, 0.08, volume * 0.5), 10);
-        setTimeout(() => generateClick(600, 0.06, volume * 0.3), 20);
+        // Woodblock sound - knocking on wood effect
+        generateClick(350, 0.2, volume); // Lower, longer base tone
         break;
       default:
         generateClick(1000, 0.05, volume);
     }
-  }, [settings, generateClick]);
+  }, [generateClick]);
 
   // Start metronome
   const startMetronome = useCallback(() => {
-    if (settings.isPlaying) return;
-
     initAudioContext();
     setSettings(prev => ({ ...prev, isPlaying: true }));
 
-    const interval = 60000 / settings.bpm; // Convert BPM to milliseconds
-    nextClickTimeRef.current = audioContextRef.current!.currentTime;
-
     const scheduleClick = () => {
       const currentTime = audioContextRef.current!.currentTime;
+      // Read current settings dynamically
+      const currentSettings = JSON.parse(localStorage.getItem('metronome_settings') || '{}');
+      const currentBpm = currentSettings.bpm || 60;
+      const isCurrentlyPlaying = currentSettings.isPlaying || false;
+      
+      // Stop if no longer playing
+      if (!isCurrentlyPlaying) {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        return;
+      }
+      
+      const interval = 60000 / currentBpm; // Convert BPM to milliseconds
+      
+      if (nextClickTimeRef.current === 0) {
+        nextClickTimeRef.current = currentTime;
+      }
       
       while (nextClickTimeRef.current < currentTime + 0.1) {
         playClick();
@@ -100,7 +116,7 @@ export const useMetronome = () => {
     };
 
     intervalRef.current = setInterval(scheduleClick, 25);
-  }, [settings.bpm, settings.isPlaying, initAudioContext, playClick]);
+  }, [initAudioContext, playClick]);
 
   // Stop metronome
   const stopMetronome = useCallback(() => {
@@ -108,28 +124,52 @@ export const useMetronome = () => {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+    nextClickTimeRef.current = 0;
     setSettings(prev => ({ ...prev, isPlaying: false }));
   }, []);
 
-  // Update BPM
+
+
+  // Update BPM with preview
   const setBpm = useCallback((bpm: number) => {
     const clampedBpm = Math.max(20, Math.min(250, bpm));
     setSettings(prev => ({ ...prev, bpm: clampedBpm }));
-  }, []);
+    
+    // Play preview sound when BPM changes
+    setTimeout(() => {
+      initAudioContext();
+      playClick();
+    }, 50);
+  }, [initAudioContext, playClick]);
 
-  // Update click tone
+  // Update click tone with preview
   const setClickTone = useCallback((tone: MetronomeSettings['clickTone']) => {
     setSettings(prev => ({ ...prev, clickTone: tone }));
-  }, []);
+    
+    // Play preview sound when tone changes
+    setTimeout(() => {
+      initAudioContext();
+      playClick();
+    }, 50);
+  }, [initAudioContext, playClick]);
 
-  // Update volume
+  // Update volume with preview
   const setVolume = useCallback((volume: number) => {
     const clampedVolume = Math.max(0, Math.min(1, volume));
     setSettings(prev => ({ ...prev, volume: clampedVolume }));
-  }, []);
+    
+    // Play preview sound when volume changes (but only if volume is not 0)
+    if (clampedVolume > 0) {
+      setTimeout(() => {
+        initAudioContext();
+        playClick();
+      }, 50);
+    }
+  }, [initAudioContext, playClick]);
 
   // Toggle play/pause
   const toggleMetronome = useCallback(() => {
+    // Use current React state instead of localStorage for immediate UI updates
     if (settings.isPlaying) {
       stopMetronome();
     } else {
