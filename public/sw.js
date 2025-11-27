@@ -1,4 +1,4 @@
-const CACHE_NAME = 'koh-pilot-v1';
+const CACHE_NAME = 'koh-pilot-v2';
 const urlsToCache = [
   '/',
   '/index.html'
