@@ -1,10 +1,7 @@
 const CACHE_NAME = 'koh-pilot-v1';
 const urlsToCache = [
   '/',
-  '/index.html',
-  '/src/main.tsx',
-  '/src/App.tsx',
-  '/src/index.css'
+  '/index.html'
 ];
 
 // Clean up old caches
@@ -25,29 +22,53 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
+      .then((cache) => {
+        // Cache files individually and handle failures gracefully
+        return Promise.allSettled(
+          urlsToCache.map((url) => 
+            cache.add(url).catch((err) => {
+              console.warn(`Failed to cache ${url}:`, err);
+            })
+          )
+        );
+      })
+      .then(() => {
+        // Skip waiting to activate the new service worker immediately
+        return self.skipWaiting();
+      })
   );
 });
 
 self.addEventListener('fetch', (event) => {
+  // Skip caching for non-GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
-      .then((response) => {
-        // Always fetch from network first, fallback to cache
+      .then((cachedResponse) => {
+        // Try to fetch from network first
         return fetch(event.request)
           .then((fetchResponse) => {
-            // Update cache with fresh response
-            if (fetchResponse.status === 200) {
+            // Only cache successful responses
+            if (fetchResponse && fetchResponse.status === 200) {
               const responseClone = fetchResponse.clone();
               caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, responseClone);
+                cache.put(event.request, responseClone).catch((err) => {
+                  console.warn('Failed to cache response:', err);
+                });
               });
             }
             return fetchResponse;
           })
           .catch(() => {
             // Fallback to cached version if network fails
-            return response;
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            // If no cache and network fails, return a basic response
+            return new Response('Offline', { status: 503 });
           });
       })
   );

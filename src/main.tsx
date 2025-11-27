@@ -20,7 +20,7 @@ if (import.meta.env.DEV && 'serviceWorker' in navigator) {
     registrations.forEach((registration) => {
       registration.unregister();
     });
-  });
+    });
 }
 
 // Force re-render on HMR updates to prevent hook issues
