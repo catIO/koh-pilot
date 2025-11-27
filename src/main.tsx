@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-// Register service worker with cleanup
-if ('serviceWorker' in navigator) {
+// Register service worker only in production
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js')
     .then((registration) => {
       console.log('SW registered: ', registration);
@@ -12,6 +12,15 @@ if ('serviceWorker' in navigator) {
     .catch((registrationError) => {
       console.log('SW registration failed: ', registrationError);
     });
+}
+
+// Unregister service worker in development
+if (import.meta.env.DEV && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => {
+      registration.unregister();
+    });
+  });
 }
 
 // Force re-render on HMR updates to prevent hook issues

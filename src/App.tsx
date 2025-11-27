@@ -150,11 +150,6 @@ class ErrorBoundary extends React.Component<
 }
 
 function App() {
-  // Check if React context is available
-  if (typeof React.useState !== 'function') {
-    return null;
-  }
-
   const [isInitialized, setIsInitialized] = useState(false);
   const [circleCount, setCircleCount] = useState(() => {
     const saved = localStorage.getItem('iterationTracker_circleCount');
@@ -233,35 +228,35 @@ function App() {
           minHeight: '100vh'
         }}
       >
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-white">
-              Practice Koh-Pilot
-            </h1>
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={toggleMetronome}
-                className="p-3 bg-emerald-500/20 backdrop-blur-sm hover:bg-emerald-500/30 rounded-lg transition-all duration-200 shadow-sm border border-emerald-500/30"
-                title={`${metronomeSettings.isPlaying ? 'Pause' : 'Play'} Metronome`}
-              >
-                {metronomeSettings.isPlaying ? (
-                  <PauseIcon className="w-5 h-5 text-emerald-400" />
-                ) : (
-                  <PlayArrowIcon className="w-5 h-5 text-emerald-400" />
-                )}
-              </button>
-              <button
-                onClick={() => setIsSettingsOpen(true)}
-                className="p-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-lg transition-all duration-200 shadow-sm border border-white/20"
-              >
-                <SettingsIcon className="w-5 h-5 text-white" />
-              </button>
+        <div className="max-w-2xl mx-auto pt-8">
+          <div className="rounded-2xl p-6 bg-gradient-to-t from-gray-800/40 to-black bg-[length:100%_200%] bg-[position:90%_100%] backdrop-blur-sm">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-8">
+              <h1 className="text-3xl font-bold text-white">
+                Practice Koh-Pilot
+              </h1>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={toggleMetronome}
+                  className="p-3 bg-emerald-500/20 backdrop-blur-sm hover:bg-emerald-500/30 rounded-lg transition-all duration-200 shadow-sm border border-emerald-500/30"
+                  title={`${metronomeSettings.isPlaying ? 'Pause' : 'Play'} Metronome`}
+                >
+                  {metronomeSettings.isPlaying ? (
+                    <PauseIcon className="w-5 h-5 text-emerald-400" />
+                  ) : (
+                    <PlayArrowIcon className="w-5 h-5 text-emerald-400" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="p-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-lg transition-all duration-200 shadow-sm border border-white/20"
+                >
+                  <SettingsIcon className="w-5 h-5 text-white" />
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Main Content */}
-          <div className="max-w-2xl mx-auto">
+            {/* Main Content */}
             {/* Circle Grid */}
             <div className="mb-8">
               <CircleGrid totalCircles={circleCount} completedCircles={completedCircles} />
