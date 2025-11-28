@@ -153,7 +153,7 @@ function App() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [circleCount, setCircleCount] = useState(() => {
     const saved = localStorage.getItem('iterationTracker_circleCount');
-    return saved ? parseInt(saved, 10) : 5;
+    return saved ? parseInt(saved, 10) : 3;
   });
   
   const [completedCircles, setCompletedCircles] = useState(() => {
@@ -165,7 +165,8 @@ function App() {
 
   // Metronome hook
   const { 
-    settings: metronomeSettings, 
+    settings: metronomeSettings,
+    isBeat,
     toggleMetronome,
     setBpm,
     setClickTone,
@@ -236,17 +237,31 @@ function App() {
                 Practice Koh-Pilot
               </h1>
               <div className="flex items-center space-x-3">
-                <button
-                  onClick={toggleMetronome}
-                  className="p-3 bg-emerald-500/20 backdrop-blur-sm hover:bg-emerald-500/30 rounded-lg transition-all duration-200 shadow-sm border border-emerald-500/30"
-                  title={`${metronomeSettings.isPlaying ? 'Pause' : 'Play'} Metronome`}
-                >
-                  {metronomeSettings.isPlaying ? (
-                    <PauseIcon className="w-5 h-5 text-emerald-400" />
-                  ) : (
-                    <PlayArrowIcon className="w-5 h-5 text-emerald-400" />
+                <div className="flex items-center space-x-2">
+                  {/* Dot that switches between grey and green on beat */}
+                  {metronomeSettings.isPlaying && (
+                    <div 
+                      className={`w-3 h-3 rounded-full transition-colors duration-100 ${
+                        isBeat ? 'bg-emerald-500' : 'bg-gray-500'
+                      }`}
+                    />
                   )}
-                </button>
+                  <button
+                    onClick={toggleMetronome}
+                    className={`p-3 rounded-lg transition-all duration-200 shadow-sm border ${
+                      metronomeSettings.isPlaying
+                        ? 'bg-emerald-500 hover:bg-emerald-600 border-emerald-500'
+                        : 'bg-white/10 backdrop-blur-sm hover:bg-white/20 border-white/20'
+                    }`}
+                    title={`${metronomeSettings.isPlaying ? 'Pause' : 'Play'} Metronome`}
+                  >
+                    {metronomeSettings.isPlaying ? (
+                      <PauseIcon className="w-5 h-5 text-white" />
+                    ) : (
+                      <PlayArrowIcon className="w-5 h-5 text-white" />
+                    )}
+                  </button>
+                </div>
                 <button
                   onClick={() => setIsSettingsOpen(true)}
                   className="p-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-lg transition-all duration-200 shadow-sm border border-white/20"

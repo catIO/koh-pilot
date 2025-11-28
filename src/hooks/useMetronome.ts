@@ -13,11 +13,12 @@ export const useMetronome = () => {
     return saved ? JSON.parse(saved) : {
       bpm: 60,
       clickTone: 'click',
-      volume: 0.7,
+      volume: 0.75,
       isPlaying: false
     };
   });
 
+  const [isBeat, setIsBeat] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const nextClickTimeRef = useRef<number>(0);
@@ -30,31 +31,49 @@ export const useMetronome = () => {
 
 
   // Initialize audio context
-  const initAudioContext = useCallback(() => {
+  const initAudioContext = useCallback(async () => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    // Resume audio context if suspended (required for user interaction)
+    if (audioContextRef.current.state === 'suspended') {
+      await audioContextRef.current.resume();
     }
   }, []);
 
   // Generate click sound
   const generateClick = useCallback((frequency: number, duration: number, volume: number) => {
-    if (!audioContextRef.current) return;
+    if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+      console.warn('AudioContext not available or closed');
+      return;
+    }
 
-    const oscillator = audioContextRef.current.createOscillator();
-    const gainNode = audioContextRef.current.createGain();
+    // Resume if suspended
+    if (audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume().catch(err => {
+        console.error('Error resuming audio context:', err);
+      });
+    }
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContextRef.current.destination);
+    try {
+      const oscillator = audioContextRef.current.createOscillator();
+      const gainNode = audioContextRef.current.createGain();
 
-    oscillator.frequency.setValueAtTime(frequency, audioContextRef.current.currentTime);
-    oscillator.type = 'sine';
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContextRef.current.destination);
 
-    gainNode.gain.setValueAtTime(0, audioContextRef.current.currentTime);
-    gainNode.gain.linearRampToValueAtTime(volume, audioContextRef.current.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContextRef.current.currentTime + duration);
+      oscillator.frequency.setValueAtTime(frequency, audioContextRef.current.currentTime);
+      oscillator.type = 'sine';
 
-    oscillator.start(audioContextRef.current.currentTime);
-    oscillator.stop(audioContextRef.current.currentTime + duration);
+      gainNode.gain.setValueAtTime(0, audioContextRef.current.currentTime);
+      gainNode.gain.linearRampToValueAtTime(volume, audioContextRef.current.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContextRef.current.currentTime + duration);
+
+      oscillator.start(audioContextRef.current.currentTime);
+      oscillator.stop(audioContextRef.current.currentTime + duration);
+    } catch (error) {
+      console.error('Error generating click:', error);
+    }
   }, []);
 
   // Play click based on selected tone
@@ -83,39 +102,63 @@ export const useMetronome = () => {
   }, [generateClick]);
 
   // Start metronome
-  const startMetronome = useCallback(() => {
-    initAudioContext();
-    setSettings(prev => ({ ...prev, isPlaying: true }));
-
-    const scheduleClick = () => {
-      const currentTime = audioContextRef.current!.currentTime;
-      // Read current settings dynamically
-      const currentSettings = JSON.parse(localStorage.getItem('metronome_settings') || '{}');
-      const currentBpm = currentSettings.bpm || 60;
-      const isCurrentlyPlaying = currentSettings.isPlaying || false;
+  const startMetronome = useCallback(async () => {
+    try {
+      await initAudioContext();
       
-      // Stop if no longer playing
-      if (!isCurrentlyPlaying) {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
+      // Ensure audio context is running
+      if (audioContextRef.current && audioContextRef.current.state !== 'running') {
+        await audioContextRef.current.resume();
+      }
+      
+      setSettings(prev => ({ ...prev, isPlaying: true }));
+
+      const scheduleClick = () => {
+        if (!audioContextRef.current) return;
+        
+        // Ensure audio context is running
+        if (audioContextRef.current.state === 'suspended') {
+          audioContextRef.current.resume();
         }
-        return;
-      }
-      
-      const interval = 60000 / currentBpm; // Convert BPM to milliseconds
-      
-      if (nextClickTimeRef.current === 0) {
-        nextClickTimeRef.current = currentTime;
-      }
-      
-      while (nextClickTimeRef.current < currentTime + 0.1) {
-        playClick();
-        nextClickTimeRef.current += interval / 1000;
-      }
-    };
+        
+        const currentTime = audioContextRef.current.currentTime;
+        // Read current settings dynamically
+        const currentSettings = JSON.parse(localStorage.getItem('metronome_settings') || '{}');
+        const currentBpm = currentSettings.bpm || 60;
+        const isCurrentlyPlaying = currentSettings.isPlaying || false;
+        
+        // Stop if no longer playing
+        if (!isCurrentlyPlaying) {
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          return;
+        }
+        
+        const interval = 60000 / currentBpm; // Convert BPM to milliseconds
+        
+        if (nextClickTimeRef.current === 0) {
+          nextClickTimeRef.current = currentTime;
+        }
+        
+        while (nextClickTimeRef.current < currentTime + 0.1) {
+          playClick();
+          setIsBeat(prev => !prev); // Toggle beat state
+          nextClickTimeRef.current += interval / 1000;
+        }
+      };
 
-    intervalRef.current = setInterval(scheduleClick, 25);
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        intervalRef.current = setInterval(scheduleClick, 25);
+        // Play first click immediately
+        playClick();
+        setIsBeat(true); // Start with green dot
+      }, 10);
+    } catch (error) {
+      console.error('Error starting metronome:', error);
+    }
   }, [initAudioContext, playClick]);
 
   // Stop metronome
@@ -125,6 +168,7 @@ export const useMetronome = () => {
       intervalRef.current = null;
     }
     nextClickTimeRef.current = 0;
+    setIsBeat(false);
     setSettings(prev => ({ ...prev, isPlaying: false }));
   }, []);
 
@@ -136,8 +180,8 @@ export const useMetronome = () => {
     setSettings(prev => ({ ...prev, bpm: clampedBpm }));
     
     // Play preview sound when BPM changes
-    setTimeout(() => {
-      initAudioContext();
+    setTimeout(async () => {
+      await initAudioContext();
       playClick();
     }, 50);
   }, [initAudioContext, playClick]);
@@ -147,8 +191,8 @@ export const useMetronome = () => {
     setSettings(prev => ({ ...prev, clickTone: tone }));
     
     // Play preview sound when tone changes
-    setTimeout(() => {
-      initAudioContext();
+    setTimeout(async () => {
+      await initAudioContext();
       playClick();
     }, 50);
   }, [initAudioContext, playClick]);
@@ -160,20 +204,20 @@ export const useMetronome = () => {
     
     // Play preview sound when volume changes (but only if volume is not 0)
     if (clampedVolume > 0) {
-      setTimeout(() => {
-        initAudioContext();
+      setTimeout(async () => {
+        await initAudioContext();
         playClick();
       }, 50);
     }
   }, [initAudioContext, playClick]);
 
   // Toggle play/pause
-  const toggleMetronome = useCallback(() => {
+  const toggleMetronome = useCallback(async () => {
     // Use current React state instead of localStorage for immediate UI updates
     if (settings.isPlaying) {
       stopMetronome();
     } else {
-      startMetronome();
+      await startMetronome();
     }
   }, [settings.isPlaying, startMetronome, stopMetronome]);
 
@@ -191,6 +235,7 @@ export const useMetronome = () => {
 
   return {
     settings,
+    isBeat,
     setBpm,
     setClickTone,
     setVolume,
