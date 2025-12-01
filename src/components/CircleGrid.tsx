@@ -3,9 +3,16 @@ import React from 'react';
 interface CircleGridProps {
   totalCircles: number;
   completedCircles: number;
+  failureCount?: number;
+  failureTrackingEnabled?: boolean;
 }
 
-const CircleGrid: React.FC<CircleGridProps> = ({ totalCircles, completedCircles }) => {
+const CircleGrid: React.FC<CircleGridProps> = ({ 
+  totalCircles, 
+  completedCircles,
+  failureCount = 0,
+  failureTrackingEnabled = false
+}) => {
   const radius = 170;
   const strokeWidth = 20;
   const normalizedRadius = radius - strokeWidth * 2;
@@ -43,6 +50,14 @@ const CircleGrid: React.FC<CircleGridProps> = ({ totalCircles, completedCircles 
             className="transition-all duration-500 ease-out"
           />
         </svg>
+        {/* Failure count display inside circle */}
+        {failureTrackingEnabled && failureCount > 0 && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="text-4xl font-bold text-red-500 drop-shadow-lg">
+              {failureCount}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

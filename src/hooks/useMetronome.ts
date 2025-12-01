@@ -32,7 +32,8 @@ export const useMetronome = () => {
 
   // Initialize audio context
   const initAudioContext = useCallback(async () => {
-    if (!audioContextRef.current) {
+    // Create new AudioContext if it doesn't exist or is closed
+    if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     // Resume audio context if suspended (required for user interaction)
@@ -106,19 +107,24 @@ export const useMetronome = () => {
     try {
       await initAudioContext();
       
-      // Ensure audio context is running
-      if (audioContextRef.current && audioContextRef.current.state !== 'running') {
+      // Ensure audio context is running (but not if it's closed)
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed' && audioContextRef.current.state !== 'running') {
         await audioContextRef.current.resume();
       }
       
       setSettings(prev => ({ ...prev, isPlaying: true }));
 
       const scheduleClick = () => {
-        if (!audioContextRef.current) return;
+        if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+          // Recreate AudioContext if closed
+          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
         
         // Ensure audio context is running
         if (audioContextRef.current.state === 'suspended') {
-          audioContextRef.current.resume();
+          audioContextRef.current.resume().catch(err => {
+            console.error('Error resuming audio context in scheduleClick:', err);
+          });
         }
         
         const currentTime = audioContextRef.current.currentTime;
@@ -226,10 +232,11 @@ export const useMetronome = () => {
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
+      // Stop metronome but don't close AudioContext - it can be reused
+      // AudioContext will be cleaned up by browser when page closes
+      setSettings(prev => ({ ...prev, isPlaying: false }));
     };
   }, []);
 

@@ -5,6 +5,7 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { MetronomeSettings } from '../hooks/useMetronome';
 
 interface SettingsModalProps {
@@ -13,12 +14,14 @@ interface SettingsModalProps {
   circleCount: number;
   onCircleCountChange: (count: number) => void;
   metronomeSettings: MetronomeSettings;
-  toggleMetronome: () => void;
+  toggleMetronome: () => Promise<void>;
   setBpm: (bpm: number) => void;
   setClickTone: (tone: MetronomeSettings['clickTone']) => void;
   setVolume: (volume: number) => void;
-  startMetronome: () => void;
+  startMetronome: () => Promise<void>;
   stopMetronome: () => void;
+  failureTrackingEnabled: boolean;
+  onFailureTrackingToggle: (enabled: boolean) => void;
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ 
@@ -32,7 +35,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   setClickTone,
   setVolume,
   startMetronome,
-  stopMetronome
+  stopMetronome,
+  failureTrackingEnabled,
+  onFailureTrackingToggle
 }) => {
 
   const [bpmInput, setBpmInput] = React.useState(metronomeSettings.bpm.toString());
@@ -92,6 +97,33 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     {num}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Failure Tracking Section */}
+            <div className="pt-4 border-t border-slate-700/50">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-red-500/20 rounded-lg">
+                    <ErrorOutlineIcon className="w-4 h-4 text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-white">Failure Tracking</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      Track failures when clicking the fail button
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => onFailureTrackingToggle(!failureTrackingEnabled)}
+                  className={`p-3 rounded-lg transition-all duration-200 ${
+                    failureTrackingEnabled
+                      ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/25'
+                      : 'bg-slate-700/50 hover:bg-slate-600/50 text-gray-300'
+                  }`}
+                >
+                  {failureTrackingEnabled ? 'On' : 'Off'}
+                </button>
               </div>
             </div>
 

@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import SettingsIcon from '@mui/icons-material/Settings';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import CircleGrid from './components/CircleGrid';
 import SettingsModal from './components/SettingsModal';
 import { useMetronome } from './hooks/useMetronome';
@@ -120,7 +121,7 @@ class ErrorBoundary extends React.Component<
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: any) {
+  static getDerivedStateFromError(_error: any) {
     return { hasError: true };
   }
 
@@ -162,6 +163,16 @@ function App() {
   });
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  
+  const [failureTrackingEnabled, setFailureTrackingEnabled] = useState(() => {
+    const saved = localStorage.getItem('failureTracking_enabled');
+    return saved === 'true';
+  });
+  
+  const [failureCount, setFailureCount] = useState(() => {
+    const saved = localStorage.getItem('failureTracking_count');
+    return saved ? parseInt(saved, 10) : 0;
+  });
 
   // Metronome hook
   const { 
@@ -188,6 +199,14 @@ function App() {
     localStorage.setItem('iterationTracker_completed', completedCircles.toString());
   }, [completedCircles]);
 
+  useEffect(() => {
+    localStorage.setItem('failureTracking_enabled', failureTrackingEnabled.toString());
+  }, [failureTrackingEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem('failureTracking_count', failureCount.toString());
+  }, [failureCount]);
+
   const handleCheck = () => {
     if (completedCircles < circleCount) {
       const newCompleted = completedCircles + 1;
@@ -206,6 +225,13 @@ function App() {
 
   const handleReset = () => {
     setCompletedCircles(0);
+    if (failureTrackingEnabled) {
+      setFailureCount(prev => prev + 1);
+    }
+  };
+
+  const handleResetFailureCount = () => {
+    setFailureCount(0);
   };
 
   const handleCircleCountChange = (count: number) => {
@@ -237,7 +263,7 @@ function App() {
                 Practice Koh-Pilot
               </h1>
               <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2" key="metronome-controls">
                   {/* Dot that switches between grey and green on beat */}
                   {metronomeSettings.isPlaying && (
                     <div 
@@ -262,7 +288,18 @@ function App() {
                     )}
                   </button>
                 </div>
+                {failureTrackingEnabled && failureCount > 0 && (
+                  <button
+                    key="reset-failures"
+                    onClick={handleResetFailureCount}
+                    className="p-3 bg-red-500/20 backdrop-blur-sm hover:bg-red-500/30 rounded-lg transition-all duration-200 shadow-sm border border-red-500/30"
+                    title={`Reset failures (${failureCount})`}
+                  >
+                    <RefreshIcon className="w-5 h-5 text-red-400" />
+                  </button>
+                )}
                 <button
+                  key="settings"
                   onClick={() => setIsSettingsOpen(true)}
                   className="p-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-lg transition-all duration-200 shadow-sm border border-white/20"
                 >
@@ -274,7 +311,12 @@ function App() {
             {/* Main Content */}
             {/* Circle Grid */}
             <div className="mb-8">
-              <CircleGrid totalCircles={circleCount} completedCircles={completedCircles} />
+              <CircleGrid 
+                totalCircles={circleCount} 
+                completedCircles={completedCircles}
+                failureCount={failureCount}
+                failureTrackingEnabled={failureTrackingEnabled}
+              />
             </div>
 
             {/* Action Buttons */}
@@ -310,6 +352,8 @@ function App() {
           setVolume={setVolume}
           startMetronome={startMetronome}
           stopMetronome={stopMetronome}
+          failureTrackingEnabled={failureTrackingEnabled}
+          onFailureTrackingToggle={setFailureTrackingEnabled}
         />
 
         {/* Confetti will be handled differently to prevent hook errors */}
