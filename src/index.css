@@ -86,4 +86,20 @@ html, body {
   cursor: pointer;
   border: none;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Timer pulse animation */
+@keyframes timerPulse {
+  0%, 100% {
+    transform: scale(1);
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
+  }
+  50% {
+    transform: scale(1.08);
+    text-shadow: 0 0 22px rgba(255, 255, 255, 0.15), 0 0 32px rgba(255, 255, 255, 0.05);
+  }
+}
+
+.animate-timer-pulse {
+  animation: timerPulse 1s ease-in-out infinite;
 } 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -174,6 +174,14 @@ function App() {
     return saved ? parseInt(saved, 10) : 0;
   });
 
+  const [timerDuration, setTimerDuration] = useState(() => {
+    const saved = localStorage.getItem('iterationTracker_timerDuration');
+    return saved ? parseInt(saved, 10) : 30;
+  });
+  
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   // Metronome hook
   const { 
     settings: metronomeSettings,
@@ -207,24 +215,70 @@ function App() {
     localStorage.setItem('failureTracking_count', failureCount.toString());
   }, [failureCount]);
 
+  useEffect(() => {
+    localStorage.setItem('iterationTracker_timerDuration', timerDuration.toString());
+  }, [timerDuration]);
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, []);
+
+  const startTimer = (duration: number) => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+    }
+    
+    setTimeLeft(duration);
+    
+    timerIntervalRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev === null || prev <= 1) {
+          if (timerIntervalRef.current) {
+            clearInterval(timerIntervalRef.current);
+            timerIntervalRef.current = null;
+          }
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const clearTimer = () => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    setTimeLeft(null);
+  };
+
   const handleCheck = () => {
     if (completedCircles < circleCount) {
       const newCompleted = completedCircles + 1;
       setCompletedCircles(newCompleted);
       
       if (newCompleted === circleCount) {
+        clearTimer();
         // Use vanilla JavaScript confetti instead of React component
         createConfetti();
         // Reset after confetti animation
         setTimeout(() => {
           setCompletedCircles(0);
         }, 3000);
+      } else {
+        startTimer(timerDuration);
       }
     }
   };
 
   const handleReset = () => {
     setCompletedCircles(0);
+    clearTimer();
     if (failureTrackingEnabled) {
       setFailureCount(prev => prev + 1);
     }
@@ -238,6 +292,9 @@ function App() {
     setCircleCount(count);
     if (completedCircles > count) {
       setCompletedCircles(count);
+      clearTimer();
+    } else if (completedCircles === count) {
+      clearTimer();
     }
   };
 
@@ -316,6 +373,8 @@ function App() {
                 completedCircles={completedCircles}
                 failureCount={failureCount}
                 failureTrackingEnabled={failureTrackingEnabled}
+                timeLeft={timeLeft}
+                onDismissTimer={clearTimer}
               />
             </div>
 
@@ -354,6 +413,8 @@ function App() {
           stopMetronome={stopMetronome}
           failureTrackingEnabled={failureTrackingEnabled}
           onFailureTrackingToggle={setFailureTrackingEnabled}
+          timerDuration={timerDuration}
+          onTimerDurationChange={setTimerDuration}
         />
 
         {/* Confetti will be handled differently to prevent hook errors */}

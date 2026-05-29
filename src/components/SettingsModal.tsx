@@ -6,6 +6,7 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import TimerIcon from '@mui/icons-material/Timer';
 import { MetronomeSettings } from '../hooks/useMetronome';
 
 interface SettingsModalProps {
@@ -22,6 +23,8 @@ interface SettingsModalProps {
   stopMetronome: () => void;
   failureTrackingEnabled: boolean;
   onFailureTrackingToggle: (enabled: boolean) => void;
+  timerDuration: number;
+  onTimerDurationChange: (duration: number) => void;
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ 
@@ -37,7 +40,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   startMetronome,
   stopMetronome,
   failureTrackingEnabled,
-  onFailureTrackingToggle
+  onFailureTrackingToggle,
+  timerDuration,
+  onTimerDurationChange
 }) => {
 
   const [bpmInput, setBpmInput] = React.useState(metronomeSettings.bpm.toString());
@@ -124,6 +129,55 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 >
                   {failureTrackingEnabled ? 'On' : 'Off'}
                 </button>
+              </div>
+            </div>
+
+            {/* Countdown Timer Section */}
+            <div className="pt-4 border-t border-slate-700/50">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="p-2 bg-indigo-500/20 rounded-lg">
+                  <TimerIcon className="w-4 h-4 text-indigo-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-white">Interval Timer</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Rest timer duration between iterations
+                  </p>
+                </div>
+              </div>
+
+              {/* Timer Duration Control */}
+              <div className="flex items-center space-x-3">
+                <input
+                  type="range"
+                  min="3"
+                  max="60"
+                  value={timerDuration}
+                  onChange={(e) => onTimerDurationChange(parseInt(e.target.value))}
+                  className="flex-1 h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer slider"
+                />
+                <input
+                  type="number"
+                  min="3"
+                  max="300"
+                  value={timerDuration}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (!isNaN(value)) {
+                      onTimerDurationChange(value);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (isNaN(value) || value < 3) {
+                      onTimerDurationChange(3);
+                    } else if (value > 300) {
+                      onTimerDurationChange(300);
+                    }
+                  }}
+                  className="w-16 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-center text-sm focus:outline-none focus:border-indigo-500"
+                />
+                <span className="text-sm text-gray-300">sec</span>
               </div>
             </div>
 
