@@ -178,6 +178,11 @@ function App() {
     const saved = localStorage.getItem('iterationTracker_timerDuration');
     return saved ? parseInt(saved, 10) : 30;
   });
+
+  const [timerEnabled, setTimerEnabled] = useState(() => {
+    const saved = localStorage.getItem('iterationTracker_timerEnabled');
+    return saved === 'false' ? false : true;
+  });
   
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -219,6 +224,10 @@ function App() {
     localStorage.setItem('iterationTracker_timerDuration', timerDuration.toString());
   }, [timerDuration]);
 
+  useEffect(() => {
+    localStorage.setItem('iterationTracker_timerEnabled', timerEnabled.toString());
+  }, [timerEnabled]);
+
   // Clean up timer on unmount
   useEffect(() => {
     return () => {
@@ -257,6 +266,13 @@ function App() {
     setTimeLeft(null);
   };
 
+  const handleTimerToggle = (enabled: boolean) => {
+    setTimerEnabled(enabled);
+    if (!enabled) {
+      clearTimer();
+    }
+  };
+
   const handleCheck = () => {
     if (completedCircles < circleCount) {
       const newCompleted = completedCircles + 1;
@@ -271,7 +287,9 @@ function App() {
           setCompletedCircles(0);
         }, 3000);
       } else {
-        startTimer(timerDuration);
+        if (timerEnabled) {
+          startTimer(timerDuration);
+        }
       }
     }
   };
@@ -415,6 +433,8 @@ function App() {
           onFailureTrackingToggle={setFailureTrackingEnabled}
           timerDuration={timerDuration}
           onTimerDurationChange={setTimerDuration}
+          timerEnabled={timerEnabled}
+          onTimerToggle={handleTimerToggle}
         />
 
         {/* Confetti will be handled differently to prevent hook errors */}
